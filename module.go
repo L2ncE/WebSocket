@@ -15,9 +15,9 @@ const (
 type connection struct {
 	ws            *websocket.Conn
 	send          chan []byte
-	numberv       int
-	forbiddenword bool
-	timelog       int64
+	limitNum      int
+	forbiddenWord bool
+	timeLog       int64
 }
 
 type message struct {

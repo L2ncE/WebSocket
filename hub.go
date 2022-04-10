@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"log"
@@ -29,53 +30,59 @@ func (m message) readPump() {
 
 	c.ws.SetReadLimit(maxMessageSize)
 	c.ws.SetReadDeadline(time.Now().Add(pongWait))
-	c.ws.SetPongHandler(func(string) error { c.ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	c.ws.SetPongHandler(func(string) error {
+		c.ws.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
 
 	for {
 		_, msg, err := c.ws.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				log.Printf("error: %v", err)
+				fmt.Println("err:", err)
 			}
-			//log.Printf("error: %v", err)
 			break
 		}
-		go m.Kickout(msg)
-
+		go m.Limit(msg)
 	}
 }
 
-// 信息处理，不合法言论 禁言警告，超过3次，踢出群聊；
-func (m message) Kickout(msg []byte) {
+// Limit 发言违规进行时间限制禁言,超过三次禁言
+func (m message) Limit(msg []byte) {
 	c := m.conn
-	// 判断是否有禁言时间,并超过5分钟禁言时间,没有超过进入禁言提醒
-	nowT := int64(time.Now().Unix())
-	if nowT-c.timelog < 300 {
+	//查看是否禁言，并判断是否超过了禁言时间
+	timeNow := time.Now().Unix()
+	if timeNow-c.timeLog < 300 {
 		h.warnmsg <- m
 	}
+
 	// 不合法信息3次，判断是否有不合法信息，没有进行信息发布
-	if c.numberv < 3 {
-		// 信息过滤，设置含有此字符串内字符为不合法信息，
-		basestr := "死亡崩薨"
-		teststr := string(msg[:])
-		for _, ev := range teststr {
-			// 判断字符串中是否含有某个字符，true/false
-			reslut := strings.Contains(basestr, string(ev))
-			if reslut == true {
-				c.numberv += 1
-				c.forbiddenword = true // 禁言为真
-				// 记录禁言开始时间,禁言时间内任何信息不能发送
-				c.timelog = int64(time.Now().Unix())
+	if c.limitNum >= 3 {
+		h.kickoutroom <- m
+		log.Println("素质太低，给你踢出去")
+		c.ws.Close() //
+	} else //没有超过三次，可以继续
+	{
+		baseStr := "死逼批操" //违法字符
+		testStr := string(msg[:])
+		for _, word := range testStr {
+			//遍历是否有违法字符
+			res := strings.Contains(baseStr, string(word))
+			if res == true {
+				c.limitNum += 1
+				c.forbiddenWord = true //禁言
+				//记录禁言开始时间
+				c.timeLog = time.Now().Unix()
 				h.warnings <- m
 				break
 			}
 		}
 		// 不禁言，消息合法 可以发送
-		if c.forbiddenword != true {
-			// 设置广播消息, 所有房间内都可以收到信息;给广播消息开头加一个特定字符串为标识，当然也有其他方法;
-			// 此例 设置以开头0为标识, 之后去掉0 ;
+		if c.forbiddenWord != true {
+			// 通过所有检查，进行广播
+
 			if msg[0] == 48 {
-				head := string("所有玩家请注意:")
+				head := "所有玩家请注意:"
 				data := head + string(msg[1:])
 				m := message{[]byte(data), m.roomid, c}
 				h.broadcastss <- m
@@ -84,14 +91,7 @@ func (m message) Kickout(msg []byte) {
 				h.broadcast <- m
 			}
 		}
-
-		// 不合法信息超过三次，踢出群
-	} else {
-		h.kickoutroom <- m
-		log.Println("要被踢出群聊了...")
-		c.ws.Close() // 此处关闭了踢出的连接,也可以不关闭做其他操作,
 	}
-
 }
 
 func (c *connection) write(mt int, payload []byte) error {
@@ -134,7 +134,7 @@ func serverWs(ctx *gin.Context) {
 	ws, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 
 	if err != nil {
-		log.Println(err)
+		fmt.Println("err:", err)
 		return
 	}
 
