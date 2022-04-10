@@ -22,7 +22,7 @@ type connection struct {
 
 type message struct {
 	data   []byte
-	roomid string
+	roomId string
 	conn   *connection
 }
 

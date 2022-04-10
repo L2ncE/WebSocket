@@ -84,10 +84,10 @@ func (m message) Limit(msg []byte) {
 			if msg[0] == 48 {
 				head := "所有玩家请注意:"
 				data := head + string(msg[1:])
-				m := message{[]byte(data), m.roomid, c}
+				m := message{[]byte(data), m.roomId, c}
 				h.broadcastss <- m
 			} else if msg[0] != 48 { //不是0，就是普通消息
-				m := message{msg, m.roomid, c}
+				m := message{msg, m.roomId, c}
 				h.broadcast <- m
 			}
 		}
