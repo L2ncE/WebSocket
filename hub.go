@@ -1,21 +1,12 @@
 package main
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"strings"
 	"time"
-)
-
-const (
-	writeWait = 10 * time.Second
-
-	pongWait = 60 * time.Second
-
-	pingPeriod = (pongWait * 9) / 10
-
-	maxMessageSize = 512
 )
 
 var (
@@ -27,14 +18,6 @@ var (
 		},
 	}
 )
-
-type connection struct {
-	ws            *websocket.Conn
-	send          chan []byte
-	numberv       int
-	forbiddenword bool
-	timelog       int64
-}
 
 func (m message) readPump() {
 	c := m.conn
@@ -144,11 +127,11 @@ func (s *message) writePump() {
 	}
 }
 
-func serverWs(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	roomid := r.Form["roomid"][0]
+func serverWs(ctx *gin.Context) {
+	ctx.Request.ParseForm()
+	roomid := ctx.Request.Form["roomid"][0]
 
-	ws, err := upgrader.Upgrade(w, r, nil)
+	ws, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 
 	if err != nil {
 		log.Println(err)

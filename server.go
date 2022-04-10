@@ -2,37 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"net/http"
 )
-
-type message struct {
-	data   []byte
-	roomid string
-	conn   *connection
-}
-
-type hub struct {
-	rooms       map[string]map[*connection]bool
-	broadcast   chan message
-	broadcastss chan message
-	warnings    chan message
-	register    chan message
-	unregister  chan message
-	kickoutroom chan message
-	warnmsg     chan message
-}
-
-var h = hub{
-	broadcast:   make(chan message),
-	broadcastss: make(chan message),
-	warnings:    make(chan message),
-	warnmsg:     make(chan message),
-	register:    make(chan message),
-	unregister:  make(chan message),
-	kickoutroom: make(chan message),
-	rooms:       make(map[string]map[*connection]bool),
-}
 
 func (h *hub) run() {
 
@@ -153,20 +123,5 @@ func (h *hub) run() {
 			}
 
 		}
-	}
-}
-
-// 要运行同包下的几个文件，都要执行
-//go run server.go hub.go
-func main() {
-
-	go h.run()
-
-	http.HandleFunc("/", serverWs)
-
-	err := http.ListenAndServe(":8899", nil)
-
-	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
 	}
 }
