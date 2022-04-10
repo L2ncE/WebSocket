@@ -14,6 +14,7 @@ var (
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
+		//跨域
 		CheckOrigin: func(r *http.Request) bool {
 			return true
 		},
@@ -29,9 +30,16 @@ func (m message) readPump() {
 	}()
 
 	c.ws.SetReadLimit(maxMessageSize)
-	c.ws.SetReadDeadline(time.Now().Add(pongWait))
+	err := c.ws.SetReadDeadline(time.Now().Add(pongWait))
+	if err != nil {
+		fmt.Println("err:", err)
+		return
+	}
 	c.ws.SetPongHandler(func(string) error {
-		c.ws.SetReadDeadline(time.Now().Add(pongWait))
+		err := c.ws.SetReadDeadline(time.Now().Add(pongWait))
+		if err != nil {
+			return err
+		}
 		return nil
 	})
 
@@ -39,8 +47,9 @@ func (m message) readPump() {
 		_, msg, err := c.ws.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				fmt.Println("err:", err)
+				fmt.Println("unexpected close error:", err)
 			}
+			fmt.Println("err:", err)
 			break
 		}
 		go m.Limit(msg)
