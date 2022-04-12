@@ -91,15 +91,8 @@ func (m message) Limit(msg []byte) {
 		if c.forbiddenWord != true {
 			// 通过所有检查，进行广播
 
-			if msg[0] == 48 {
-				head := "所有玩家请注意:"
-				data := head + string(msg[1:])
-				m := message{[]byte(data), m.roomId, c}
-				h.broadcastss <- m
-			} else if msg[0] != 48 { //不是0，就是普通消息
-				m := message{msg, m.roomId, c}
-				h.broadcast <- m
-			}
+			m := message{msg, m.roomId, c}
+			h.broadcast <- m
 		}
 	}
 }
