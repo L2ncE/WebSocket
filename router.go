@@ -8,7 +8,8 @@ import (
 func InitEngine() {
 	engine := gin.Default()
 	engine.GET("/", serverWs)
-	err := engine.Run(":8899")
+	go h.run()
+	err := engine.Run()
 	if err != nil {
 		fmt.Printf("init error:%v\n", err)
 		return
