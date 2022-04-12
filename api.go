@@ -7,6 +7,26 @@ import (
 	"time"
 )
 
+func serverWs(ctx *gin.Context) {
+	ctx.Request.ParseForm()
+	roomid := ctx.Request.Form["roomid"][0]
+
+	ws, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
+
+	if err != nil {
+		fmt.Println("err:", err)
+		return
+	}
+
+	c := &connection{send: make(chan []byte, 256), ws: ws}
+	m := message{nil, roomid, c}
+
+	h.register <- m
+
+	go m.writePump()
+	go m.readPump()
+}
+
 func changePassword(ctx *gin.Context) {
 	oldPassword := ctx.PostForm("old_password")
 	newPassword := ctx.PostForm("new_password")
