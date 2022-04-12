@@ -72,7 +72,7 @@ func (m message) Limit(msg []byte) {
 		c.ws.Close() //
 	} else //没有超过三次，可以继续
 	{
-		baseStr := "死逼批操" //违法字符
+		baseStr := "死傻操" //违法字符
 		testStr := string(msg[:])
 		for _, word := range testStr {
 			//遍历是否有违法字符
