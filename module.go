@@ -24,6 +24,7 @@ type connection struct {
 type message struct {
 	data   []byte
 	roomId string
+	name   string
 	conn   *connection
 }
 
