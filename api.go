@@ -8,8 +8,12 @@ import (
 )
 
 func serverWs(ctx *gin.Context) {
-	ctx.Request.ParseForm()
-	roomid := ctx.Request.Form["roomid"][0]
+	err := ctx.Request.ParseForm()
+	if err != nil {
+		fmt.Println("err:", err)
+		return
+	}
+	room_id := ctx.Request.Form["room_id"][0]
 
 	ws, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 
@@ -19,7 +23,7 @@ func serverWs(ctx *gin.Context) {
 	}
 
 	c := &connection{send: make(chan []byte, 256), ws: ws}
-	m := message{nil, roomid, c}
+	m := message{nil, room_id, c}
 
 	h.register <- m
 
