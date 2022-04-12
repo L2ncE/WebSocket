@@ -13,7 +13,9 @@ func serverWs(ctx *gin.Context) {
 		fmt.Println("err:", err)
 		return
 	}
-	room_id := ctx.Request.Form["room_id"][0]
+	roomId := ctx.Request.Form["room_id"][0]
+	Iname, _ := ctx.Get("username")
+	name := Iname.(string)
 
 	ws, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 
@@ -23,7 +25,7 @@ func serverWs(ctx *gin.Context) {
 	}
 
 	c := &connection{send: make(chan []byte, 256), ws: ws}
-	m := message{nil, room_id, c}
+	m := message{nil, roomId, name, c}
 
 	h.register <- m
 
