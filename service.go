@@ -91,7 +91,7 @@ func (m message) Limit(msg []byte) {
 		if c.forbiddenWord != true {
 			// 通过所有检查，进行广播
 
-			m := message{msg, m.roomId, c}
+			m := message{msg, m.roomId, m.name, c}
 			h.broadcast <- m
 		}
 	}
