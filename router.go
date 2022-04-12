@@ -7,15 +7,22 @@ import (
 
 func InitEngine() {
 	engine := gin.Default()
+	engine.Use(CORS())
 	engine.POST("/register", register)
 	engine.POST("/login", login)
+
 	userGroup := engine.Group("/user")
-	userGroup.Use(CORS())
 	{
 		userGroup.Use(JWTAuth)
-		userGroup.POST("/password", changePassword)
-		userGroup.GET("/ws", serverWs)
+		userGroup.PUT("/password", changePassword)
 	}
+
+	wsGroup := engine.Group("/")
+	{
+		wsGroup.Use(JWTAuth)
+		wsGroup.GET("/", serverWs)
+	}
+
 	go h.run()
 	err := engine.Run()
 	if err != nil {
