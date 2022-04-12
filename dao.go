@@ -28,3 +28,34 @@ func InitGormDB() (err error) {
 	db = dB
 	return err
 }
+
+func UpdatePassword(Name string, newPassword string) error {
+	deRes := db.Model(&User{}).Where("Name = ?", Name).Update("Password", newPassword)
+	err := deRes.Error
+	if err != nil {
+		fmt.Printf("update failed, err:%v\n", err)
+		return err
+	}
+	return err
+}
+
+func SelectUserByUsername(Name string) (User, error) {
+	var user User
+	dbRes := db.Model(&User{}).Select("id", "password").Where("Name = ?", Name).First(&user)
+	err := dbRes.Error
+	if err != nil {
+		return user, err
+	}
+	fmt.Println(user)
+	return user, nil
+}
+
+func Insert(user User) error {
+	deres := db.Select("Name", "Password").Create(&User{Name: user.Name, Password: user.Password})
+	err := deres.Error
+	if err != nil {
+		fmt.Printf("insert failed, err:%v\n", err)
+		return err
+	}
+	return err
+}
