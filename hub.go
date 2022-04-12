@@ -1,26 +1,18 @@
 package main
 
-import (
-	"fmt"
-)
-
 func (h *hub) run() {
 	for {
 		select {
-		case m := <-h.register: //传输链接
+		case m := <-h.register:
 			conns := h.rooms[m.roomId]
-			if conns == nil { // 链接保存到相应的房间
+			if conns == nil {
 				conns = make(map[*connection]bool)
 				h.rooms[m.roomId] = conns
-				fmt.Println("在线人数:==", len(conns))
-				fmt.Println("rooms:==", h.rooms)
 			}
 			h.rooms[m.roomId][m.conn] = true
-			fmt.Println("在线人数:==", len(conns))
-			fmt.Println("rooms:==", h.rooms)
 
 			for con := range conns {
-				sysmsg := "系统消息：欢迎新伙伴加入" + m.roomId + "聊天室！！！"
+				sysmsg := "系统消息：欢迎新伙伴" + m.name + "加入" + m.roomId + "聊天室！！！"
 				data := []byte(sysmsg)
 				select {
 				case con.send <- data:
@@ -34,12 +26,12 @@ func (h *hub) run() {
 					delete(conns, m.conn) //删除链接
 					close(m.conn.send)
 					for con := range conns {
-						delmsg := "系统消息：有小伙伴离开了" + m.roomId + "聊天室"
-						data := []byte(delmsg)
+						delMsg := "系统消息：" + m.name + "离开了" + m.roomId + "聊天室"
+						data := []byte(delMsg)
 						select {
 						case con.send <- data:
 						}
-						if len(conns) == 0 { // 链接都断开，删除房间
+						if len(conns) == 0 {
 							delete(h.rooms, m.roomId)
 						}
 					}
@@ -62,7 +54,7 @@ func (h *hub) run() {
 				}
 			}
 
-		case m := <-h.warnings: //不合法信息警告
+		case m := <-h.warnings:
 			conns := h.rooms[m.roomId]
 			if conns != nil {
 				if _, ok := conns[m.conn]; ok {
