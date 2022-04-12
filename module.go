@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/websocket"
 	"time"
 )
@@ -46,4 +47,16 @@ var h = hub{
 	unregister:  make(chan message),
 	kickoutroom: make(chan message),
 	rooms:       make(map[string]map[*connection]bool),
+}
+
+type User struct {
+	Id       int
+	Name     string
+	Password string
+}
+
+type MyClaims struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	jwt.StandardClaims
 }
