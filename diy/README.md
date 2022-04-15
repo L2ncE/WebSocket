@@ -1,0 +1,3 @@
+#简化版手搓WebSocket
+
+其他结构与gorrila中的相同
